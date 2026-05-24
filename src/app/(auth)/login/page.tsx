@@ -68,8 +68,8 @@ export default function LoginPage() {
     >
       <Card className="border-border/50 shadow-xl backdrop-blur-sm bg-background/95">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Enter your credentials to access the admin panel</CardDescription>
+            <CardTitle className="text-2xl">Welcome to StoreSync</CardTitle>
+            <CardDescription>Enter your credentials to access your store panel</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

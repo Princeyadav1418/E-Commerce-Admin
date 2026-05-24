@@ -7,8 +7,8 @@ import { Toaster } from '@/components/ui/sonner';
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'Ecommerce Admin Dashboard',
-  description: 'A modern admin dashboard for ecommerce built with Next.js',
+  title: 'StoreSync | Modern E-commerce OS',
+  description: 'The complete command center for managing your e-commerce business.',
 };
 
 export default function RootLayout({

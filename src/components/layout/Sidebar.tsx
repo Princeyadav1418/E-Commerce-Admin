@@ -34,7 +34,7 @@ export function Sidebar() {
     <aside className="fixed inset-y-0 left-0 z-50 flex flex-col w-64 border-r bg-background/80 backdrop-blur-md">
       <div className="flex h-16 shrink-0 items-center px-6 border-b">
         <PackageOpen className="h-6 w-6 mr-2 text-primary" />
-        <span className="text-lg font-semibold tracking-tight">Admin OS</span>
+        <span className="text-lg font-semibold tracking-tight">StoreSync</span>
       </div>
       <div className="flex-1 overflow-auto py-6 flex flex-col gap-2 px-4">
         {navItems.map((item) => {

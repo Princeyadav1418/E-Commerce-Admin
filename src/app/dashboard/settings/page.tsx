@@ -46,7 +46,7 @@ export default function SettingsPage() {
           <div className="col-span-2 space-y-4">
             <div className="grid gap-2">
               <Label htmlFor="storeName">Store Name</Label>
-              <Input id="storeName" defaultValue="Admin OS" />
+              <Input id="storeName" defaultValue="StoreSync" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="storeEmail">Contact Email</Label>

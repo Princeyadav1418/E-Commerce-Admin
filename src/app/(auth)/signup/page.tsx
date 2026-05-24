@@ -69,8 +69,8 @@ export default function SignupPage() {
     >
       <Card className="border-border/50 shadow-xl backdrop-blur-sm bg-background/95">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>Enter your details to create your admin account</CardDescription>
+            <CardTitle className="text-2xl">Create your store account</CardTitle>
+            <CardDescription>Enter your details to create your StoreSync account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

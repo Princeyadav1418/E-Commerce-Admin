@@ -17,13 +17,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 
-const MOCK_ORDERS = [
-  { _id: "1", customerName: "Alice Smith", customerEmail: "alice@example.com", totalAmount: 145.99, status: "pending", createdAt: new Date().toISOString() },
-  { _id: "2", customerName: "Bob Jones", customerEmail: "bob@example.com", totalAmount: 299.50, status: "processing", createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { _id: "3", customerName: "Charlie Brown", customerEmail: "charlie@example.com", totalAmount: 49.99, status: "delivered", createdAt: new Date(Date.now() - 86400000 * 2).toISOString() },
-  { _id: "4", customerName: "Diana Prince", customerEmail: "diana@example.com", totalAmount: 899.00, status: "shipped", createdAt: new Date(Date.now() - 86400000 * 3).toISOString() },
-];
-
 export default function OrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,16 +26,15 @@ export default function OrdersPage() {
     try {
       const res = await fetch(`/api/orders`);
       const data = await res.json();
-      if (data.success && data.orders.length > 0) {
+      if (data.success && data.orders) {
         setOrders(data.orders);
       } else {
-        // Use mock data if db is empty for preview purposes
-        setTimeout(() => setOrders(MOCK_ORDERS), 500);
+        setOrders([]);
       }
     } catch {
       toast.error("Failed to fetch orders");
     } finally {
-      setTimeout(() => setLoading(false), 500);
+      setLoading(false);
     }
   };
 

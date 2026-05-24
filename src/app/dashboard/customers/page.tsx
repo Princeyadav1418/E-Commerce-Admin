@@ -16,12 +16,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-const MOCK_CUSTOMERS = [
-  { _id: "1", name: "Alice Smith", email: "alice@example.com", totalSpent: 450.00, ordersCount: 3, createdAt: new Date().toISOString() },
-  { _id: "2", name: "Bob Jones", email: "bob@example.com", totalSpent: 1200.50, ordersCount: 8, createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { _id: "3", name: "Charlie Brown", email: "charlie@example.com", totalSpent: 85.00, ordersCount: 1, createdAt: new Date(Date.now() - 86400000 * 2).toISOString() },
-];
-
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,16 +25,15 @@ export default function CustomersPage() {
     try {
       const res = await fetch(`/api/customers`);
       const data = await res.json();
-      if (data.success && data.customers.length > 0) {
+      if (data.success && data.customers) {
         setCustomers(data.customers);
       } else {
-        // Use mock data if db is empty for preview purposes
-        setTimeout(() => setCustomers(MOCK_CUSTOMERS), 500);
+        setCustomers([]);
       }
     } catch {
       toast.error("Failed to fetch customers");
     } finally {
-      setTimeout(() => setLoading(false), 500);
+      setLoading(false);
     }
   };
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion, Variants } from "framer-motion";
 import { DollarSign, Users, CreditCard, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,21 +12,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-const data = [
-  { name: "Jan", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Feb", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Mar", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Apr", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "May", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Jun", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Jul", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Aug", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Sep", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Oct", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Nov", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Dec", total: Math.floor(Math.random() * 5000) + 1000 },
-];
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -43,6 +29,49 @@ const itemVariants: Variants = {
 };
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    subscriptions: 0,
+    sales: 0,
+    activeNow: 0,
+  });
+
+  const [chartData, setChartData] = useState([
+    { name: "Jan", total: 0 },
+    { name: "Feb", total: 0 },
+    { name: "Mar", total: 0 },
+    { name: "Apr", total: 0 },
+    { name: "May", total: 0 },
+    { name: "Jun", total: 0 },
+    { name: "Jul", total: 0 },
+    { name: "Aug", total: 0 },
+  ]);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const response = await fetch('/api/analytics');
+        const data = await response.json();
+        if (data.success) {
+          setStats(data.stats);
+          // Just as an example setup for chart, we map totalRevenue to the current month 
+          // and some dummy data for previous months (since DB doesn't have time-series yet)
+          setChartData([
+            { name: "Jan", total: Math.floor(data.stats.totalRevenue * 0.1) },
+            { name: "Feb", total: Math.floor(data.stats.totalRevenue * 0.2) },
+            { name: "Mar", total: Math.floor(data.stats.totalRevenue * 0.4) },
+            { name: "Apr", total: Math.floor(data.stats.totalRevenue * 0.5) },
+            { name: "May", total: Math.floor(data.stats.totalRevenue * 0.8) },
+            { name: "Jun", total: data.stats.totalRevenue },
+          ]);
+        }
+      } catch (error) {
+        console.error("Failed to load analytics", error);
+      }
+    };
+    fetchAnalytics();
+  }, []);
+
   return (
     <div className="flex-1 space-y-6">
       <div className="flex items-center justify-between">
@@ -61,44 +90,44 @@ export default function DashboardPage() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$45,231.89</div>
-              <p className="text-xs text-muted-foreground">+20.1% from last month</p>
+              <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
+              <p className="text-xs text-muted-foreground">All time revenue</p>
             </CardContent>
           </Card>
         </motion.div>
         <motion.div variants={itemVariants}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Subscriptions</CardTitle>
+              <CardTitle className="text-sm font-medium">Customers</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+2350</div>
-              <p className="text-xs text-muted-foreground">+180.1% from last month</p>
+              <div className="text-2xl font-bold">{stats.subscriptions}</div>
+              <p className="text-xs text-muted-foreground">Registered accounts</p>
             </CardContent>
           </Card>
         </motion.div>
         <motion.div variants={itemVariants}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Sales</CardTitle>
+              <CardTitle className="text-sm font-medium">Orders</CardTitle>
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+12,234</div>
-              <p className="text-xs text-muted-foreground">+19% from last month</p>
+              <div className="text-2xl font-bold">{stats.sales}</div>
+              <p className="text-xs text-muted-foreground">Total orders placed</p>
             </CardContent>
           </Card>
         </motion.div>
         <motion.div variants={itemVariants}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Now</CardTitle>
+              <CardTitle className="text-sm font-medium">Active Products</CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+573</div>
-              <p className="text-xs text-muted-foreground">+201 since last hour</p>
+              <div className="text-2xl font-bold">{stats.activeNow}</div>
+              <p className="text-xs text-muted-foreground">Currently on sale</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -115,7 +144,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="pl-2">
             <ResponsiveContainer width="100%" height={350}>
-              <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
