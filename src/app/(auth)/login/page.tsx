@@ -29,6 +29,7 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -54,6 +55,32 @@ export default function LoginPage() {
       router.refresh();
     } catch (error: any) {
       toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    const email = getValues("email")?.trim();
+    if (!email) {
+      toast.error("Enter your email first");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || "Failed to start password reset");
+      }
+      toast.success("If the email exists, a reset link has been sent.");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to start password reset");
     } finally {
       setIsLoading(false);
     }
@@ -87,9 +114,13 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <a href="#" onClick={(e) => { e.preventDefault(); toast.info("Password reset coming soon!"); }} className="text-xs text-primary hover:underline">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-xs text-primary hover:underline"
+                >
                   Forgot password?
-                </a>
+                </button>
               </div>
               <Input
                 id="password"

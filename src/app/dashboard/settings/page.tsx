@@ -1,113 +1,145 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Copy, Save, AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
+type AdminProfile = {
+  name: string;
+  email: string;
+  role: "admin" | "superadmin";
+};
+
 export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState<string>("admin");
-  const [fetchingRole, setFetchingRole] = useState(true);
+  const [fetching, setFetching] = useState(true);
+  const [profile, setProfile] = useState<AdminProfile>({
+    name: "",
+    email: "",
+    role: "admin",
+  });
 
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.admin) {
-          setRole(data.admin.role);
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+        if (!res.ok || !data.success || !data.admin) {
+          throw new Error(data.error || "Failed to load profile");
         }
-      })
-      .finally(() => setFetchingRole(false));
+
+        setProfile({
+          name: data.admin.name ?? "",
+          email: data.admin.email ?? "",
+          role: data.admin.role ?? "admin",
+        });
+      } catch (error: any) {
+        toast.error(error.message || "Failed to load profile");
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    fetchProfile();
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setLoading(true);
-    setTimeout(() => {
-      toast.success("Settings updated successfully.");
+    try {
+      const res = await fetch("/api/auth/me", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: profile.name,
+          email: profile.email,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to save settings");
+      }
+      toast.success("Profile updated successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save settings");
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast("Copied to clipboard");
+  const copyRole = async () => {
+    await navigator.clipboard.writeText(profile.role);
+    toast.success("Role copied");
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="max-w-4xl space-y-6">
       <div className="flex flex-col gap-1">
         <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
         <p className="text-muted-foreground">
-          Manage your store settings and configuration.
+          Manage your admin profile and environment details.
         </p>
       </div>
 
       <Separator />
 
-      <div className="space-y-8">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-2">
-          <div className="space-y-1">
-            <h3 className="text-lg font-medium">Store Profile</h3>
-            <p className="text-sm text-muted-foreground">
-              Update your store information.
-            </p>
-          </div>
-          <div className="col-span-2 space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="storeName">Store Name</Label>
-              <Input id="storeName" defaultValue="StoreSync" />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="storeEmail">Contact Email</Label>
-              <Input id="storeEmail" type="email" defaultValue="admin@example.com" />
-            </div>
-            <Button onClick={handleSave} disabled={loading}>
-              {loading ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
+      <div className="grid gap-4 pt-2 md:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-1">
+          <h3 className="text-lg font-medium">Admin Profile</h3>
+          <p className="text-sm text-muted-foreground">
+            Update your name and login email.
+          </p>
         </div>
-
-        <Separator />
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-2">
-          <div className="space-y-1">
-            <h3 className="text-lg font-medium flex items-center gap-2">
-              API Keys
-              {role !== "superadmin" && !fetchingRole && (
-                <span className="text-[10px] bg-destructive/10 text-destructive px-2 py-0.5 rounded-full font-bold">Superadmin Only</span>
-              )}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Manage API keys for external integrations.
-            </p>
+        <div className="col-span-2 space-y-4">
+          <div className="grid gap-2">
+            <Label htmlFor="name">Full Name</Label>
+            <Input
+              id="name"
+              value={profile.name}
+              onChange={(e) => setProfile((prev) => ({ ...prev, name: e.target.value }))}
+              disabled={fetching || loading}
+            />
           </div>
-          <div className="col-span-2 space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="publishableKey">Publishable Key</Label>
-              <div className="flex items-center gap-2">
-                <Input id="publishableKey" readOnly value={role === "superadmin" ? "pk_test_1234567890abcdef" : "************************"} disabled={role !== "superadmin"} />
-                <Button variant="outline" size="icon" onClick={() => copyToClipboard("pk_test_1234567890abcdef")} disabled={role !== "superadmin"}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="secretKey">Secret Key</Label>
-              <div className="flex items-center gap-2">
-                <Input id="secretKey" type="password" readOnly placeholder="************************" value="" disabled={role !== "superadmin"} />
-                <Button variant="outline" onClick={() => toast.info("Reveal secret key functionality is disabled for security.")} disabled={role !== "superadmin"}>
-                  Reveal
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {role === "superadmin" ? "Never share your secret key with anyone." : "You do not have permission to view API keys."}
-              </p>
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={profile.email}
+              onChange={(e) => setProfile((prev) => ({ ...prev, email: e.target.value }))}
+              disabled={fetching || loading}
+            />
+          </div>
+          <Button onClick={handleSave} disabled={fetching || loading}>
+            {loading ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
+      </div>
+
+      <Separator />
+
+      <div className="grid gap-4 pt-2 md:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-1">
+          <h3 className="text-lg font-medium">Environment</h3>
+          <p className="text-sm text-muted-foreground">
+            Runtime information and access level.
+          </p>
+        </div>
+        <div className="col-span-2 space-y-4">
+          <div className="grid gap-2">
+            <Label htmlFor="role">Role</Label>
+            <div className="flex items-center gap-2">
+              <Input id="role" value={profile.role} readOnly />
+              <Button variant="outline" onClick={copyRole}>
+                Copy
+              </Button>
             </div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            API keys are managed in deployment environment variables, not exposed in this dashboard UI.
+          </p>
         </div>
       </div>
     </div>

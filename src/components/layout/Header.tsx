@@ -1,7 +1,5 @@
 "use client";
 
-"use client";
-
 import { ModeToggle } from "@/components/mode-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, Search, LogOut, Settings, User } from "lucide-react";
@@ -38,7 +36,7 @@ export function Header() {
       <div className="flex items-center flex-1 gap-4">
         <form className="relative w-full max-w-sm hidden md:block" onSubmit={(e) => {
           e.preventDefault();
-          toast.info("Global search coming soon!");
+          toast.info("Use page-level search for now");
         }}>
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input

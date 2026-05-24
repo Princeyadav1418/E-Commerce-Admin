@@ -48,16 +48,16 @@ export default function OrdersPage() {
   }, []);
 
   const filteredOrders = orders.filter((order) =>
-    order.customerName.toLowerCase().includes(search.toLowerCase()) ||
-    order.customerEmail.toLowerCase().includes(search.toLowerCase()) ||
-    order._id.toLowerCase().includes(search.toLowerCase())
+    String(order.customerName ?? "").toLowerCase().includes(search.toLowerCase()) ||
+    String(order.customerEmail ?? "").toLowerCase().includes(search.toLowerCase()) ||
+    String(order._id ?? "").toLowerCase().includes(search.toLowerCase())
   );
   const handleExport = () => {
     const headers = ["Order ID", "Customer Name", "Email", "Date", "Status", "Items", "Total"];
     const csvContent = [
       headers.join(","),
-      ...filteredOrders.map(o => 
-        `"${o._id}","${o.customerName}","${o.customerEmail}","${new Date(o.createdAt).toLocaleDateString()}","${o.status.replace("_", " ")}","${o.orderItems.length}","${o.totalAmount}"`
+      ...filteredOrders.map((o) =>
+        `"${o._id}","${o.customerName}","${o.customerEmail}","${new Date(o.createdAt).toLocaleDateString()}","${String(o.status).replace("_", " ")}","${(o.items ?? []).length}","${o.totalAmount}"`
       )
     ].join("\n");
 
@@ -213,7 +213,7 @@ export default function OrdersPage() {
                     <div key={item._id} className="flex justify-between items-center text-sm">
                       <div>
                         <p className="font-medium">Product ID: {typeof item.productId === 'object' ? item.productId.title : item.productId}</p>
-                        <p className="text-muted-foreground">Qty: {item.quantity} × ${item.price.toFixed(2)}</p>
+                        <p className="text-muted-foreground">Qty: {item.quantity} x ${item.price.toFixed(2)}</p>
                       </div>
                       <p className="font-medium">${(item.quantity * item.price).toFixed(2)}</p>
                     </div>

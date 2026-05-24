@@ -16,7 +16,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="bg-primary/10 p-2 rounded-xl">
             <PackageOpen className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Admin OS</h1>
+          <h1 className="text-2xl font-bold tracking-tight">StoreSync</h1>
         </motion.div>
         {children}
       </div>

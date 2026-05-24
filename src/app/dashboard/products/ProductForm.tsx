@@ -100,7 +100,7 @@ export default function ProductForm({ initialData, onSuccess }: { initialData?: 
       
       toast.success(initialData ? "Product updated!" : "Product created!");
       onSuccess();
-    } catch (error) {
+    } catch {
       toast.error("An error occurred");
     } finally {
       setLoading(false);
