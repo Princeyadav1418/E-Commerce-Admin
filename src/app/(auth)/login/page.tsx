@@ -87,9 +87,9 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <Link href="#" className="text-xs text-primary hover:underline">
+                <a href="#" onClick={(e) => { e.preventDefault(); toast.info("Password reset coming soon!"); }} className="text-xs text-primary hover:underline">
                   Forgot password?
-                </Link>
+                </a>
               </div>
               <Input
                 id="password"

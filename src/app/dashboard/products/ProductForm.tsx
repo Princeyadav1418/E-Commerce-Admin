@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,14 +27,29 @@ export default function ProductForm({ initialData, onSuccess }: { initialData?: 
   const [image, setImage] = useState<string | null>(initialData?.image || null);
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ProductFormValues>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema) as any,
     defaultValues: initialData || {
       status: "draft",
       price: 0,
       stock: 0,
+      title: "",
+      description: "",
+      category: "",
     },
   });
+
+  useEffect(() => {
+    reset(initialData || {
+      status: "draft",
+      price: 0,
+      stock: 0,
+      title: "",
+      description: "",
+      category: "",
+    });
+    setImage(initialData?.image || null);
+  }, [initialData, reset]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -56,8 +71,8 @@ export default function ProductForm({ initialData, onSuccess }: { initialData?: 
       } else {
         throw new Error(data.error);
       }
-    } catch (error) {
-      toast.error("Failed to upload image");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to upload image");
     } finally {
       setUploadingImage(false);
     }

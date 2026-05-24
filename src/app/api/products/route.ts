@@ -1,7 +1,18 @@
 import { ProductStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withMongoLikeId } from "@/lib/serializers";
+
+const productSchema = z.object({
+  title: z.string().min(2),
+  description: z.string().min(5),
+  price: z.coerce.number().min(0),
+  image: z.string().url(),
+  category: z.string().min(2),
+  stock: z.coerce.number().min(0),
+  status: z.enum(["active", "draft", "archived"]),
+});
 
 export async function GET(req: Request) {
   try {
@@ -34,15 +45,21 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const data = await req.json();
+    const json = await req.json();
+    const result = productSchema.safeParse(json);
+    if (!result.success) {
+      return NextResponse.json({ success: false, error: "Validation failed" }, { status: 400 });
+    }
+    const data = result.data;
+
     const product = await prisma.product.create({
       data: {
         title: data.title,
         description: data.description,
-        price: Number(data.price),
+        price: data.price,
         image: data.image,
         category: data.category,
-        stock: Number(data.stock),
+        stock: data.stock,
         status: data.status as ProductStatus,
       },
     });

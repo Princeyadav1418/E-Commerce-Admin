@@ -62,9 +62,12 @@ export default function ProductsPage() {
       if (res.ok) {
         toast.success("Product deleted");
         fetchProducts();
+      } else {
+        const errorData = await res.json();
+        toast.error(errorData.error || "Failed to delete product");
       }
     } catch {
-      toast.error("Failed to delete product");
+      toast.error("Failed to delete product due to network error");
     }
   };
 

@@ -9,7 +9,15 @@ export async function POST(req: Request) {
     const file = formData.get("file") as File;
 
     if (!file) {
-      return NextResponse.json({ error: "No file received." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "No file received." }, { status: 400 });
+    }
+
+    if (!file.type.startsWith("image/")) {
+      return NextResponse.json({ success: false, error: "Only image files are allowed." }, { status: 400 });
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json({ success: false, error: "File exceeds max size of 5MB." }, { status: 400 });
     }
 
     const arrayBuffer = await file.arrayBuffer();
@@ -24,7 +32,7 @@ export async function POST(req: Request) {
     });
 
     if (uploadError) {
-      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+      return NextResponse.json({ success: false, error: uploadError.message }, { status: 500 });
     }
 
     const { data } = supabaseAdmin.storage.from(PRODUCTS_BUCKET).getPublicUrl(filePath);
@@ -38,6 +46,6 @@ export async function POST(req: Request) {
       },
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message || "Upload failed." }, { status: 500 });
   }
 }

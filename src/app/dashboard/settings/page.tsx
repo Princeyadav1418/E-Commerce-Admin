@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Copy, Save } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Copy, Save, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,19 @@ import { Separator } from "@/components/ui/separator";
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState<string>("admin");
+  const [fetchingRole, setFetchingRole] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.admin) {
+          setRole(data.admin.role);
+        }
+      })
+      .finally(() => setFetchingRole(false));
+  }, []);
 
   const handleSave = () => {
     setLoading(true);
@@ -62,7 +75,12 @@ export default function SettingsPage() {
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-2">
           <div className="space-y-1">
-            <h3 className="text-lg font-medium">API Keys</h3>
+            <h3 className="text-lg font-medium flex items-center gap-2">
+              API Keys
+              {role !== "superadmin" && !fetchingRole && (
+                <span className="text-[10px] bg-destructive/10 text-destructive px-2 py-0.5 rounded-full font-bold">Superadmin Only</span>
+              )}
+            </h3>
             <p className="text-sm text-muted-foreground">
               Manage API keys for external integrations.
             </p>
@@ -71,8 +89,8 @@ export default function SettingsPage() {
             <div className="grid gap-2">
               <Label htmlFor="publishableKey">Publishable Key</Label>
               <div className="flex items-center gap-2">
-                <Input id="publishableKey" readOnly value="pk_test_1234567890abcdef" />
-                <Button variant="outline" size="icon" onClick={() => copyToClipboard("pk_test_1234567890abcdef")}>
+                <Input id="publishableKey" readOnly value={role === "superadmin" ? "pk_test_1234567890abcdef" : "************************"} disabled={role !== "superadmin"} />
+                <Button variant="outline" size="icon" onClick={() => copyToClipboard("pk_test_1234567890abcdef")} disabled={role !== "superadmin"}>
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
@@ -80,13 +98,13 @@ export default function SettingsPage() {
             <div className="grid gap-2">
               <Label htmlFor="secretKey">Secret Key</Label>
               <div className="flex items-center gap-2">
-                <Input id="secretKey" type="password" readOnly value="sk_test_1234567890abcdef" />
-                <Button variant="outline" size="icon" onClick={() => copyToClipboard("sk_test_1234567890abcdef")}>
-                  <Copy className="h-4 w-4" />
+                <Input id="secretKey" type="password" readOnly placeholder="************************" value="" disabled={role !== "superadmin"} />
+                <Button variant="outline" onClick={() => toast.info("Reveal secret key functionality is disabled for security.")} disabled={role !== "superadmin"}>
+                  Reveal
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Never share your secret key with anyone.
+                {role === "superadmin" ? "Never share your secret key with anyone." : "You do not have permission to view API keys."}
               </p>
             </div>
           </div>

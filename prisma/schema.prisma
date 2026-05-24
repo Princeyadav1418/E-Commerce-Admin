@@ -34,6 +34,19 @@ model Admin {
   role      AdminRole @default(admin)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  logs      AuditLog[]
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  adminId   String   @db.Uuid
+  action    String
+  entity    String
+  entityId  String
+  details   String?
+  createdAt DateTime @default(now())
+
+  admin Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)
 }
 
 model Product {
