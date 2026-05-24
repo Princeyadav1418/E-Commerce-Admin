@@ -67,10 +67,10 @@ export default function SignupPage() {
       transition={{ duration: 0.3 }}
       className="w-full"
     >
-      <Card className="border-border/50 shadow-xl backdrop-blur-sm bg-background/95">
+      <Card className="border-white/10 bg-white/[0.07] text-white shadow-2xl shadow-black/30 backdrop-blur-2xl">
         <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl">Create your store account</CardTitle>
-            <CardDescription>Enter your details to create your StoreSync account</CardDescription>
+            <CardDescription className="text-white/60">Enter your details to create your StoreSync account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -80,7 +80,7 @@ export default function SignupPage() {
                 id="name"
                 placeholder="John Doe"
                 {...register("name")}
-                className={errors.name ? "border-destructive" : ""}
+                className={`border-white/10 bg-white/[0.06] text-white placeholder:text-white/35 ${errors.name ? "border-destructive" : ""}`}
               />
               {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
             </div>
@@ -91,7 +91,7 @@ export default function SignupPage() {
                 type="email"
                 placeholder="m@example.com"
                 {...register("email")}
-                className={errors.email ? "border-destructive" : ""}
+                className={`border-white/10 bg-white/[0.06] text-white placeholder:text-white/35 ${errors.email ? "border-destructive" : ""}`}
               />
               {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
             </div>
@@ -101,16 +101,16 @@ export default function SignupPage() {
                 id="password"
                 type="password"
                 {...register("password")}
-                className={errors.password ? "border-destructive" : ""}
+                className={`border-white/10 bg-white/[0.06] text-white ${errors.password ? "border-destructive" : ""}`}
               />
               {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
             </div>
-            <Button className="w-full" type="submit" disabled={isLoading}>
+            <Button className="w-full bg-white text-black hover:bg-white/90" type="submit" disabled={isLoading}>
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Sign up"}
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center text-sm text-muted-foreground">
+        <CardFooter className="flex justify-center text-sm text-white/55">
           Already have an account?{" "}
           <Link href="/login" className="ml-1 text-primary hover:underline font-medium">
             Sign in

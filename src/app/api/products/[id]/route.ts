@@ -5,12 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { withMongoLikeId } from "@/lib/serializers";
 
 const productSchema = z.object({
-  title: z.string().min(2),
-  description: z.string().min(5),
-  price: z.coerce.number().min(0),
-  image: z.string().url(),
-  category: z.string().min(2),
-  stock: z.coerce.number().min(0),
+  title: z.string().min(2, "Title must be at least 2 characters"),
+  description: z.string().min(5, "Description must be at least 5 characters"),
+  price: z.coerce.number().min(0, "Price must be positive"),
+  image: z.string().min(1).default("/file.svg"),
+  category: z.string().min(2, "Category must be at least 2 characters"),
+  stock: z.coerce.number().min(0, "Stock must be positive"),
   status: z.enum(["active", "draft", "archived"]),
 });
 
@@ -21,7 +21,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     
     const result = productSchema.safeParse(json);
     if (!result.success) {
-      return NextResponse.json({ success: false, error: "Validation failed" }, { status: 400 });
+      return NextResponse.json({
+        success: false,
+        error: "Validation failed",
+        issues: result.error.flatten().fieldErrors,
+      }, { status: 400 });
     }
     const data = result.data;
 
@@ -43,6 +47,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     if (error?.code === "P2025") {
       return NextResponse.json({ success: false, error: "Product not found" }, { status: 404 });
     }
+    if (error?.code === "P2003") {
+      return NextResponse.json({
+        success: false,
+        error: "This product is attached to existing orders. Archive it instead of deleting it.",
+      }, { status: 409 });
+    }
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
@@ -59,6 +69,12 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   } catch (error: any) {
     if (error?.code === "P2025") {
       return NextResponse.json({ success: false, error: "Product not found" }, { status: 404 });
+    }
+    if (error?.code === "P2003") {
+      return NextResponse.json({
+        success: false,
+        error: "This product is attached to existing orders. Archive it instead of deleting it.",
+      }, { status: 409 });
     }
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

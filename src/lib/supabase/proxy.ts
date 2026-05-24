@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { supabaseAnonKey, supabaseUrl } from "./env";
 
 const isAuthPage = (pathname: string) => pathname.startsWith("/login") || pathname.startsWith("/signup");
+const isPublicPage = (pathname: string) => pathname === "/";
 type CookieToSet = { name: string; value: string; options?: Record<string, unknown> };
 
 export const updateSession = async (request: NextRequest) => {
@@ -43,7 +44,7 @@ export const updateSession = async (request: NextRequest) => {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!apiRoute && !authPage) {
+    if (!apiRoute && !authPage && !isPublicPage(pathname)) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }

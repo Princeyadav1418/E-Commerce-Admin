@@ -22,7 +22,7 @@ const navItems = [
   { title: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-export function Sidebar() {
+export function Sidebar({ onNavigate, mobile = false }: { onNavigate?: () => void; mobile?: boolean }) {
   const pathname = usePathname();
 
   const handleLogout = async () => {
@@ -31,7 +31,10 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 flex flex-col w-64 border-r bg-background/80 backdrop-blur-md">
+    <aside className={cn(
+      "inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-white/10 bg-background/85 backdrop-blur-xl",
+      mobile ? "relative h-full" : "fixed"
+    )}>
       <div className="flex h-16 shrink-0 items-center px-6 border-b">
         <PackageOpen className="h-6 w-6 mr-2 text-primary" />
         <span className="text-lg font-semibold tracking-tight">StoreSync</span>
@@ -50,6 +53,7 @@ export function Sidebar() {
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
+              onClick={onNavigate}
             >
               <item.icon
                 className={cn(

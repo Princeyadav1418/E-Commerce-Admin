@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +20,8 @@ const productSchema = z.object({
   stock: z.coerce.number().min(0, "Stock must be positive"),
   status: z.enum(["active", "draft", "archived"]),
 });
+
+const FALLBACK_IMAGE = "/file.svg";
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
@@ -69,9 +72,11 @@ export default function ProductForm({ initialData, onSuccess }: { initialData?: 
         setImage(data.result.secure_url);
         toast.success("Image uploaded!");
       } else {
-        throw new Error(data.error);
+        setImage(data.fallbackUrl || FALLBACK_IMAGE);
+        toast.warning(data.error ? `Upload unavailable. Using fallback image. ${data.error}` : "Upload unavailable. Using fallback image.");
       }
     } catch (error: any) {
+      setImage(FALLBACK_IMAGE);
       toast.error(error.message || "Failed to upload image");
     } finally {
       setUploadingImage(false);
@@ -79,14 +84,9 @@ export default function ProductForm({ initialData, onSuccess }: { initialData?: 
   };
 
   const onSubmit = async (data: ProductFormValues) => {
-    if (!image) {
-      toast.error("Please upload an image");
-      return;
-    }
-
     setLoading(true);
     try {
-      const payload = { ...data, image };
+      const payload = { ...data, image: image || FALLBACK_IMAGE };
       const url = initialData ? `/api/products/${initialData._id}` : "/api/products";
       const method = initialData ? "PUT" : "POST";
 
@@ -96,12 +96,16 @@ export default function ProductForm({ initialData, onSuccess }: { initialData?: 
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Failed to save product");
+      const json = await res.json();
+      if (!res.ok) {
+        const firstIssue = json.issues ? Object.values(json.issues).flat()[0] : null;
+        throw new Error(String(firstIssue || json.error || "Failed to save product"));
+      }
       
       toast.success(initialData ? "Product updated!" : "Product created!");
       onSuccess();
-    } catch {
-      toast.error("An error occurred");
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -115,13 +119,13 @@ export default function ProductForm({ initialData, onSuccess }: { initialData?: 
           <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/80 transition-colors border-muted-foreground/25">
             <div className="flex flex-col items-center justify-center pt-5 pb-6">
               {image ? (
-                <img src={image} alt="Preview" className="h-32 object-contain" />
+                <Image src={image} alt="Preview" width={160} height={128} unoptimized className="h-32 w-auto object-contain" />
               ) : uploadingImage ? (
                 <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
               ) : (
                 <>
                   <UploadCloud className="w-8 h-8 mb-2 text-muted-foreground" />
-                  <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                  <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span></p>
                 </>
               )}
             </div>
@@ -138,7 +142,11 @@ export default function ProductForm({ initialData, onSuccess }: { initialData?: 
         
         <div className="space-y-2 col-span-2">
           <Label htmlFor="description">Description</Label>
-          <Input id="description" {...register("description")} className={errors.description ? "border-destructive" : ""} />
+          <textarea
+            id="description"
+            {...register("description")}
+            className={`min-h-24 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${errors.description ? "border-destructive" : ""}`}
+          />
         </div>
 
         <div className="space-y-2">

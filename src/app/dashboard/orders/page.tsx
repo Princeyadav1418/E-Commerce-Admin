@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, Eye, Download } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -23,16 +23,19 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/orders`);
+      const res = await fetch(`/api/orders?search=${encodeURIComponent(search)}&page=${page}&limit=10`);
       const data = await res.json();
       if (data.success && data.orders) {
         setOrders(data.orders);
+        setTotalPages(data.totalPages ?? 1);
       } else {
         setOrders([]);
       }
@@ -41,11 +44,16 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, search]);
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    const timeout = setTimeout(fetchOrders, 220);
+    return () => clearTimeout(timeout);
+  }, [fetchOrders]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   const filteredOrders = orders.filter((order) =>
     String(order.customerName ?? "").toLowerCase().includes(search.toLowerCase()) ||
@@ -102,7 +110,8 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <div className="rounded-md border bg-card text-card-foreground">
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-card/80 text-card-foreground shadow-xl shadow-black/5 backdrop-blur-xl">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -177,6 +186,16 @@ export default function OrdersPage() {
             )}
           </TableBody>
         </Table>
+        </div>
+      </div>
+      <div className="flex items-center justify-end gap-2">
+        <Button variant="outline" disabled={page <= 1} onClick={() => setPage((value) => Math.max(value - 1, 1))}>
+          Previous
+        </Button>
+        <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
+        <Button variant="outline" disabled={page >= totalPages} onClick={() => setPage((value) => Math.min(value + 1, totalPages))}>
+          Next
+        </Button>
       </div>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

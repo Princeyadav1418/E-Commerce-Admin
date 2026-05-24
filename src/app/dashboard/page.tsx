@@ -46,6 +46,12 @@ export default function DashboardPage() {
     { name: "Jul", total: 0 },
     { name: "Aug", total: 0 },
   ]);
+  const [recentSales, setRecentSales] = useState<Array<{
+    _id: string;
+    customerName: string;
+    customerEmail: string;
+    totalAmount: number;
+  }>>([]);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -54,16 +60,8 @@ export default function DashboardPage() {
         const data = await response.json();
         if (data.success) {
           setStats(data.stats);
-          // Just as an example setup for chart, we map totalRevenue to the current month 
-          // and some dummy data for previous months (since DB doesn't have time-series yet)
-          setChartData([
-            { name: "Jan", total: Math.floor(data.stats.totalRevenue * 0.1) },
-            { name: "Feb", total: Math.floor(data.stats.totalRevenue * 0.2) },
-            { name: "Mar", total: Math.floor(data.stats.totalRevenue * 0.4) },
-            { name: "Apr", total: Math.floor(data.stats.totalRevenue * 0.5) },
-            { name: "May", total: Math.floor(data.stats.totalRevenue * 0.8) },
-            { name: "Jun", total: data.stats.totalRevenue },
-          ]);
+          setChartData(data.chartData ?? []);
+          setRecentSales(data.recentSales ?? []);
         }
       } catch (error) {
         console.error("Failed to load analytics", error);
@@ -138,7 +136,7 @@ export default function DashboardPage() {
         animate="show"
         className="grid gap-4 md:grid-cols-2 lg:grid-cols-7"
       >
-        <Card className="col-span-4">
+        <Card className="col-span-4 border-white/10 bg-card/80 shadow-2xl shadow-black/5 backdrop-blur-xl">
           <CardHeader>
             <CardTitle>Overview</CardTitle>
           </CardHeader>
@@ -197,22 +195,24 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-        <Card className="col-span-3">
+        <Card className="col-span-3 border-white/10 bg-card/80 shadow-2xl shadow-black/5 backdrop-blur-xl">
           <CardHeader>
             <CardTitle>Recent Sales</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-8">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center">
+              {recentSales.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No recent sales yet.</p>
+              ) : recentSales.map((sale) => (
+                <div key={sale._id} className="flex items-center">
                   <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center font-semibold text-sm">
-                    {String.fromCharCode(64 + i)}
+                    {sale.customerName.charAt(0).toUpperCase()}
                   </div>
                   <div className="ml-4 space-y-1">
-                    <p className="text-sm font-medium leading-none">Customer {i}</p>
-                    <p className="text-sm text-muted-foreground">customer{i}@email.com</p>
+                    <p className="text-sm font-medium leading-none">{sale.customerName}</p>
+                    <p className="text-sm text-muted-foreground">{sale.customerEmail}</p>
                   </div>
-                  <div className="ml-auto font-medium">+$299.00</div>
+                  <div className="ml-auto font-medium">+${sale.totalAmount.toFixed(2)}</div>
                 </div>
               ))}
             </div>

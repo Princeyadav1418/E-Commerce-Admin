@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, Download, Eye } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -23,17 +23,20 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/customers`);
+      const res = await fetch(`/api/customers?search=${encodeURIComponent(search)}&page=${page}&limit=10`);
       const data = await res.json();
       if (data.success && data.customers) {
         setCustomers(data.customers);
+        setTotalPages(data.totalPages ?? 1);
       } else {
         setCustomers([]);
       }
@@ -42,11 +45,16 @@ export default function CustomersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, search]);
 
   useEffect(() => {
-    fetchCustomers();
-  }, []);
+    const timeout = setTimeout(fetchCustomers, 220);
+    return () => clearTimeout(timeout);
+  }, [fetchCustomers]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -103,7 +111,8 @@ export default function CustomersPage() {
         </Button>
       </div>
 
-      <div className="rounded-md border bg-card text-card-foreground">
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-card/80 text-card-foreground shadow-xl shadow-black/5 backdrop-blur-xl">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -185,6 +194,16 @@ export default function CustomersPage() {
             )}
           </TableBody>
         </Table>
+        </div>
+      </div>
+      <div className="flex items-center justify-end gap-2">
+        <Button variant="outline" disabled={page <= 1} onClick={() => setPage((value) => Math.max(value - 1, 1))}>
+          Previous
+        </Button>
+        <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
+        <Button variant="outline" disabled={page >= totalPages} onClick={() => setPage((value) => Math.min(value + 1, totalPages))}>
+          Next
+        </Button>
       </div>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

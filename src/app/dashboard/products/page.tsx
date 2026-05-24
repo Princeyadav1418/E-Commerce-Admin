@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { Plus, Search, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -29,22 +30,29 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/products?search=${search}`);
+      const res = await fetch(`/api/products?search=${encodeURIComponent(search)}&page=${page}&limit=10`);
       const data = await res.json();
       if (data.success) {
         setProducts(data.products);
+        setTotalPages(data.totalPages ?? 1);
       }
     } catch {
       toast.error("Failed to fetch products");
     } finally {
       setLoading(false);
     }
+  }, [search, page]);
+
+  useEffect(() => {
+    setPage(1);
   }, [search]);
 
   useEffect(() => {
@@ -115,7 +123,8 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      <div className="rounded-md border bg-card text-card-foreground">
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-card/80 text-card-foreground shadow-xl shadow-black/5 backdrop-blur-xl">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -159,7 +168,7 @@ export default function ProductsPage() {
                   >
                     <TableCell>
                       <div className="h-10 w-10 rounded-lg overflow-hidden border bg-muted">
-                        <img src={product.image} alt={product.title} className="h-full w-full object-cover" />
+                        <Image src={product.image || "/file.svg"} alt={product.title} width={40} height={40} unoptimized className="h-full w-full object-cover" />
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">{product.title}</TableCell>
@@ -193,6 +202,16 @@ export default function ProductsPage() {
             )}
           </TableBody>
         </Table>
+        </div>
+      </div>
+      <div className="flex items-center justify-end gap-2">
+        <Button variant="outline" disabled={page <= 1} onClick={() => setPage((value) => Math.max(value - 1, 1))}>
+          Previous
+        </Button>
+        <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
+        <Button variant="outline" disabled={page >= totalPages} onClick={() => setPage((value) => Math.min(value + 1, totalPages))}>
+          Next
+        </Button>
       </div>
     </div>
   );
